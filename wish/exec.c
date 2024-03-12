@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/wait.h>
 #include "batch.h"
 
 extern int num_args;
@@ -50,15 +51,22 @@ void exec_exit(char **exec_args) {
 
 void exec(char **exec_args) {
     strcat(PATH, exec_args[0]);
-    
-    if (strcmp(exec_args[0], "cd") == 0) {
-        exec_cd(exec_args);
-    }
-    else if (strcmp(exec_args[0], "exit") == 0) {
-        exec_exit(exec_args);	
-    } else {
-        exec_cmd(PATH, exec_args);
-    }
+   
+    //int rc = fork();
+  //  if (rc < 0) {
+//	print_error();
+//	exit(1);
+    //} else if (rc == 0) {
+        if (strcmp(exec_args[0], "cd") == 0) {
+            exec_cd(exec_args);
+        } else if (strcmp(exec_args[0], "exit") == 0) {
+            exec_exit(exec_args);	
+        } else {
+            exec_cmd(PATH, exec_args);
+        }
+  //  } else {
+//	wait(NULL);
+    //}
     for (int i = 0; i < 100; i++) 
         PATH[i] = '\0';
     strcpy(PATH, "/bin/");

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 #include "exec.h"
 
@@ -70,9 +71,19 @@ int batch(char *filename) {
         lineNum++;
     }
 */
+    
+    int rc = fork();
     do {
-	parse(file);
-	exec(args);
+	int rc = fork();
+	if (rc < 0) {
+            write(STDERR_FILENO, error_message, sizeof(error_message));
+	    exit(1);
+	} else if (rc == 0) {
+	    parse(file);
+	    exec(args);
+	} else {
+	    wait(NULL);
+	}
     }
     while (next_arg != NULL && strcmp(next_arg, args[0]) != 0);
 

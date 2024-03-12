@@ -76,7 +76,7 @@ int batch(char *filename) {
         parse(file);
         exec(args);
     }
-    while (next_arg != NULL && strcmp(next_arg, args[0]) != 0);
+    while (next_arg != NULL || strcmp(next_arg, args[0]) != 0);
 
     lineNum = 0;
     fclose(file);

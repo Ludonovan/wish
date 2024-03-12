@@ -19,8 +19,10 @@ char PATH[100] = "/bin/";
 void exec_cmd(char *PATH, char **exec_args) { //execute other commands
     if (execv(PATH, exec_args) == -1) { 
         print_error();
+	next_arg = NULL;
         exit(1);
     }
+    next_arg = NULL;
 }
 
 void exec_cd(char **exec_args) { // cd
@@ -29,11 +31,9 @@ void exec_cd(char **exec_args) { // cd
         print_error();
         exit(0);
     } else if (chdir(exec_args[1]) == -1) { // arg not found
-            print_error();
-	    next_arg = NULL;
-            exit(0);
-    } else { 
-        next_arg = exec_args[num_args];
+        print_error();
+	next_arg = NULL;
+        exit(0);
     }
 }
 
@@ -43,7 +43,7 @@ void exec_exit(char **exec_args) {
     if (exec_args[1] == NULL) {
 	exit(0);
     } else { 
-	//print_error();
+	print_error();
         next_arg = NULL;
         exit(0);
     }
@@ -51,20 +51,21 @@ void exec_exit(char **exec_args) {
 
 void exec(char **exec_args) {
     strcat(PATH, exec_args[0]);
-    int rc = fork();
-    if (rc < 0) {
-	print_error();
-	exit(1);
-    } else if (rc == 0) {
-        if (strcmp(exec_args[0], "cd") == 0) {
-            exec_cd(exec_args);
-        } else if (strcmp(exec_args[0], "exit") == 0) {
-            exec_exit(exec_args);	
-        } else {
-            exec_cmd(PATH, exec_args);
-        }
+   
+    if (strcmp(exec_args[0], "cd") == 0) {
+        exec_cd(exec_args);
+    } else if (strcmp(exec_args[0], "exit") == 0) {
+        exec_exit(exec_args);	
     } else {
-	wait(NULL);
+        int rc = fork();
+        if (rc < 0) {
+	    print_error();
+	    exit(1);
+        } else if (rc == 0) {
+            exec_cmd(PATH, exec_args);
+        } else {
+	    wait(NULL);
+        }
     }
     for (int i = 0; i < 100; i++) 
         PATH[i] = '\0';

@@ -72,18 +72,9 @@ int batch(char *filename) {
     }
 */
     
-    int rc = fork();
     do {
-	int rc = fork();
-	if (rc < 0) {
-            write(STDERR_FILENO, error_message, sizeof(error_message));
-	    exit(1);
-	} else if (rc == 0) {
-	    parse(file);
-	    exec(args);
-	} else {
-	    wait(NULL);
-	}
+        parse(file);
+        exec(args);
     }
     while (next_arg != NULL && strcmp(next_arg, args[0]) != 0);
 

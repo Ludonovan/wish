@@ -17,8 +17,14 @@ char *next_arg;
 
 void print_error(){ write(STDERR_FILENO, error_message, strlen(error_message)); }
 
+
+void redir(char **exec_args) {
+    
+}
+
 void exec_cmd(char *PATH[MAX_PATH], char **exec_args) { // execute other commands
-    // TODO make function to find redireciton character in a string (maybe in batch.c)
+    // TODO make function to find redireciton character in a string
+    //redir(exec_args); 
     if (exec_args[1] != NULL && strcmp(exec_args[1], ">") == 0) { 
 	if (exec_args[0] == NULL || exec_args[2] == NULL || exec_args[3] != NULL) {
 	    print_error();
@@ -26,11 +32,11 @@ void exec_cmd(char *PATH[MAX_PATH], char **exec_args) { // execute other command
 	} else {
 	    // TODO else make new file named output and put output into file
 	    // might need to use piping here...
-	    FILE *output;   
-	    output = fopen("output", "w");
-	    char *out_args[2] = {exec_args[0], NULL};
-            exec_cmd(PATH, out_args);
-	    fclose(output);
+	   // FILE *output;   
+	   // output = fopen("output", "w");
+	    
+             
+	   // fclose(output);
 	}
     }
      
@@ -67,7 +73,7 @@ void exec_cd(char **exec_args) { // cd
 void exec_path(char **exec_args) { // path
     if (exec_args[1] != NULL) { // has args
         for (int j = 0; j < num_args - 1; j++) {
-	    PATH[j] = malloc(strlen(exec_args[j]) + 3);
+	    PATH[j] = malloc(strlen(exec_args[j+1]) + 3);
 	    char *tmp = malloc(strlen("/" + 30));
 	    strcpy(tmp, "/");
 	    strcat(tmp, exec_args[1]);
@@ -77,7 +83,7 @@ void exec_path(char **exec_args) { // path
 	}
     } else if (exec_args[1] == NULL) { // no args
         for (int i = 0; i < MAX_PATH - 1; i++) { 
-            PATH[i] = '\0';
+            PATH[i] = NULL;
         }
     }
 }

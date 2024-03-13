@@ -1,5 +1,6 @@
 extern int num_args;
 extern char error_message[30];
+extern char *PATH[20];
 
 void exec(char **exec_args);
 void print_error();

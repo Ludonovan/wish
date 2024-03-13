@@ -16,6 +16,8 @@ extern char error_message[30];
 
 char *args[MAX_ARGS] = { NULL };
 
+char *PATH[MAX_ARGS] = { NULL };
+
 int num_args; 
 
 // Parse the next line of the file and store contents in args array
@@ -38,7 +40,7 @@ void parse(FILE *file) {
     }
 
     // Tokenize the line
-    token = strtok(line, " \n");
+    token = strtok(line, " \n >");
 
     while (token != NULL && num_args < MAX_ARGS - 1) {
         token_length = strlen(token);
@@ -72,12 +74,19 @@ int batch(char *filename) {
     }
 */
     
+    PATH[0] = malloc(strlen("/bin/" + 10));
+    strcpy(PATH[0], "/bin/");
     do {
         parse(file);
+	if (strcmp(args[0], "path") != 0 && PATH[0] != NULL) {
+            strcat(PATH[0], args[0]);
+	}
         exec(args);
     }
     while (args[0] != NULL && next_arg != NULL);
 
+
+    strcpy(PATH[0], "/bin/");
     lineNum = 0;
     fclose(file);
     return 0;

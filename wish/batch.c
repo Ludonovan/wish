@@ -36,19 +36,24 @@ void check_redir(char *token, int token_length) {
 		    int j = found_at + 1;
             int k = 0;
 		    char tmp2[MAX_ARGS];
-		    while (token[j] != '\0' && j < token_length - 1) {
+            int redir_err = 0;
+		    while (token[j] != '\0' && token[j] != ' ' && j < token_length - 1) {
 		        if (token[j] != '\n') {
                     tmp2[k] = token[j];
 		            j++; 
                     k++;
                 } else if (token[j] == '>') {
+                    redir_err = 1;
                     write(STDERR_FILENO, error_message, sizeof(error_message));
                     exit(0);
                 } else { break; }
 		    }
             args[num_args] = malloc(strlen(tmp2));
             strncpy(args[num_args], tmp2, strlen(tmp2));
-            
+            if (args[num_args] != NULL && strcmp(args[num_args], "") != 0 
+                    && args[num_args + 1] == NULL && redir_err == 0) {
+                valid_redir = 1;
+            }
 	    }
         if (found_at != redir_found) {
 	        redir_found++;

@@ -16,12 +16,13 @@ char *args[MAX_ARGS] = { NULL };
 char *PATH[MAX_ARGS] = { NULL };
 int num_args; 
 int found_at = -1;
+int valid_redir = 0;
 
 void check_redir(char *token, int token_length) { 
 	int redir_found = 0;
 	while (token != NULL && redir_found < token_length) {
 	    if (token[redir_found] != '\0' && token[redir_found] == '>') {
-		    char tmp[MAX_ARGS];
+            char tmp[MAX_ARGS];
             found_at = redir_found;
 		    for (int i = 0; i < redir_found; i++) {
 		        tmp[i] = token[i];
@@ -47,7 +48,8 @@ void check_redir(char *token, int token_length) {
 		    }
             args[num_args] = malloc(strlen(tmp2));
             strncpy(args[num_args], tmp2, strlen(tmp2));
-	    } 
+            
+	    }
         if (found_at != redir_found) {
 	        redir_found++;
         } else { break; }

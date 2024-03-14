@@ -1,4 +1,5 @@
 extern int num_args;
+extern int found_at;
 extern char error_message[30];
 extern char *PATH[20];
 

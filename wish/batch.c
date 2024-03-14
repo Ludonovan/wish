@@ -74,13 +74,13 @@ void parse(FILE *file) {
         free(line);
         exit(0);
     }
-    check_redir(line, (int) len);	
+    check_redir(line, strlen(line));	
 
     // Tokenize the line
     token = strtok(line, " \t \n >");
 
     while (token != NULL && num_args < MAX_ARGS - 1 && found_at == -1) {
-        token_length = strlen(token) + 1;
+        token_length = strlen(token);
         args[num_args] = malloc(token_length);
         check_redir(token, token_length);
         strncpy(args[num_args], token, token_length);

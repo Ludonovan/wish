@@ -22,11 +22,12 @@ void check_redir(char *token, int token_length) {
 	int redir_found = 0;
 	while (token != NULL && redir_found < token_length) {
 	    if (token[redir_found] != '\0' && token[redir_found] == '>') {
-            char tmp[MAX_ARGS];
+            char tmp[MAX_ARGS] = {'\0'};// = { NULL };
             found_at = redir_found;
 		    for (int i = 0; i < redir_found; i++) {
 		        tmp[i] = token[i];
 		    }
+
             args[num_args] = malloc(strlen(tmp));
 		    strncpy(args[num_args], tmp, strlen(tmp));
             num_args++;
@@ -35,9 +36,9 @@ void check_redir(char *token, int token_length) {
             num_args++;
 		    int j = found_at + 1;
             int k = 0;
-		    char tmp2[MAX_ARGS];
+		    char tmp2[MAX_ARGS] = {'\0'};// = { NULL };
             int redir_err = 0;
-		    while (token[j] != '\0' && token[j] != ' ' && j < token_length - 1) {
+		    while (token[j] != '\0' && j < token_length - 1) {
 		        if (token[j] != '\n') {
                     tmp2[k] = token[j];
 		            j++; 
@@ -46,10 +47,16 @@ void check_redir(char *token, int token_length) {
                     redir_err = 1;
                     write(STDERR_FILENO, error_message, sizeof(error_message));
                     exit(0);
-                } else { break; }
+                } else if (token[j] == ' ') {
+                    num_args++;
+                    j++;
+                    k++;
+                } else { 
+                    args[num_args] = malloc(strlen(tmp2));
+                    strncpy(args[num_args], tmp2, strlen(tmp2));
+
+                }
 		    }
-            args[num_args] = malloc(strlen(tmp2));
-            strncpy(args[num_args], tmp2, strlen(tmp2));
             if (args[num_args] != NULL && strcmp(args[num_args], "") != 0 
                     && args[num_args + 1] == NULL && redir_err == 0) {
                 valid_redir = 1;

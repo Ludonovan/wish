@@ -16,8 +16,10 @@ int main(int argc, char *argv[]) {
     char *filename = argv[1];
     if (argc < 2){
          interactive();
-    } else {	
+    } else if (argc == 2) {	
         batch(filename);
+    } else {
+        write(STDERR_FILENO, error_message, sizeof(error_message));
     }
     return 0;
 }

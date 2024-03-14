@@ -22,21 +22,24 @@ void check_redir(char *token, int token_length) {
 	int redir_found = 0;
 	while (token != NULL && redir_found < token_length) {
 	    if (token[redir_found] != '\0' && token[redir_found] == '>') {
-            char tmp[MAX_ARGS] = {'\0'};// = { NULL };
+            char tmp[MAX_ARGS] = {'\0'};
             found_at = redir_found;
 		    for (int i = 0; i < redir_found; i++) {
-		        tmp[i] = token[i];
+		        if (token[i] != ' ') { 
+                    tmp[i] = token[i];
+                } else {
+                    args[num_args] = malloc(strlen(tmp));
+		            strncpy(args[num_args], tmp, strlen(tmp));
+                    num_args++;
+                }
 		    }
 
-            args[num_args] = malloc(strlen(tmp));
-		    strncpy(args[num_args], tmp, strlen(tmp));
-            num_args++;
             args[num_args] = malloc(strlen(tmp));
 		    strncpy(args[num_args], ">", strlen(">"));
             num_args++;
 		    int j = found_at + 1;
             int k = 0;
-		    char tmp2[MAX_ARGS] = {'\0'};// = { NULL };
+		    char tmp2[MAX_ARGS] = {'\0'};
             int redir_err = 0;
 		    while (token[j] != '\0' && j < token_length - 1) {
 		        if (token[j] != '\n') {

@@ -21,7 +21,6 @@ int found = 0;
 void print_error(){ write(STDERR_FILENO, error_message, strlen(error_message)); }
 
 void exec_cmd(char *PATH[MAX_PATH], char **exec_args) { // execute other commands
-    //char *output = malloc(strlen(exec_args[found_at + 1]) + 2);
     if (exec_args[1] != NULL && strcmp(exec_args[1], ">") == 0) { 
 	    if (exec_args[0] == NULL || exec_args[2] == NULL || exec_args[3] != NULL) {
 	        print_error();
@@ -44,7 +43,6 @@ void exec_cmd(char *PATH[MAX_PATH], char **exec_args) { // execute other command
         exit(1);
     } 
     next_arg = NULL;
-    //free(output);
 }
 
 

@@ -21,8 +21,8 @@ int found = 0;
 void print_error(){ write(STDERR_FILENO, error_message, strlen(error_message)); }
 
 void exec_cmd(char *PATH[MAX_PATH], char **exec_args) { // execute other commands
-    if (exec_args[1] != NULL && strcmp(exec_args[1], ">") == 0) { 
-	    if (exec_args[0] == NULL || exec_args[2] == NULL || exec_args[3] != NULL) {
+    if (exec_args[found_at] != NULL && strcmp(exec_args[found_at], ">") == 0) { 
+	    if (exec_args[found_at - 1] == NULL || exec_args[found_at] == NULL || exec_args[found_at + 1] != NULL) {
 	        print_error();
 	        exit(1);
 	    } else if (found_at != -1 && valid_redir == 1 && exec_args[3] == NULL) {

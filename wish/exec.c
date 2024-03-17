@@ -92,18 +92,20 @@ void exec_cd(char **exec_args) { // cd
     strcpy(PATH[0], strtok(PATH[0], "cd"));
 }
 
-
+int in_path = 1;
 void exec_path(char **exec_args) { // path
+    in_path = 0;
     if (exec_args[1] != NULL) { // has args
         for (int j = 0; j < num_args - 1; j++) {
 	        if (PATH[j] != NULL) 
 		        free(PATH[j]);
 	        PATH[j] = malloc(strlen(exec_args[j+1]) + 3);
 	        char *tmp = malloc(strlen(exec_args[j+1]) + 3);
-	        strcat(tmp, exec_args[1]);
+	        strcat(tmp, exec_args[j+1]);
 	        strcpy(PATH[j], tmp);
 	        strcat(PATH[j], "/");
 	        free(tmp);
+            in_path++;
 	    }
     } else if (exec_args[1] == NULL) { // no args
         for (int k = 0; k < MAX_PATH - 1; k++) {
@@ -111,6 +113,7 @@ void exec_path(char **exec_args) { // path
 		        free(PATH[k]);	
             PATH[k] = NULL;
         }
+        in_path = 0;
     }
 }
 

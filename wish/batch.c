@@ -156,7 +156,11 @@ int batch(char *filename) {
     do {
         parse(file);
 	    if (strcmp(args[0], "path") != 0 && PATH[0] != NULL) {
-            strcat(PATH[0], args[0]);
+            int i = 0;
+            while (i < num_args && PATH[i] != NULL) {
+                strcat(PATH[i], args[i]);
+                i++;
+            }
 	    }
         exec(args);
     }

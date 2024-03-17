@@ -81,8 +81,7 @@ void check_redir(char *token, int token_length) {
             }
         } else if (token[redir_found] == '\n') {
             token = NULL;
-        }
-	    if (redir_in_args != found_at) {
+        } else if (redir_in_args != found_at) {
             redir_found++;
         }
 	}

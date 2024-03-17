@@ -20,21 +20,25 @@ int found_at = -1; // where in args '>' is
 void check_redir(char *token, int token_length) { 
 	int redir_found = 0; // where in token redir is
 	int redir_in_args;
-    while (token != NULL && redir_found < token_length && token[redir_found] != '\n') {
+    while (token != NULL && redir_found < token_length) {
 	    if (token[redir_found] == '>') {
             char tmp[MAX_LINE] = {'\0'};
             int tmp_index = 0;
 		    for (int token_index = 0; token_index <= redir_found; token_index++) { // make string of chars before '>'
-		        if (token_index != redir_found && token[token_index] != ' ') { // not a space 
+		        if (token[token_index] != ' ' && token[token_index] != '\n') {  
                     tmp[tmp_index] = token[token_index];
                     if (token_index != redir_found - 1) { tmp_index++; } // dont increase token index if at char before '>'
-                } else { // anything but a space
+                } else if (token[token_index] == ' ' ) {  
                     int tmp_len = strlen(tmp);
                     args[num_args] = malloc(tmp_len);
 		            strncpy(args[num_args], tmp, tmp_len); 
                     num_args++;
                     tmp_index = 0;
                     for (int j = 0; j < tmp_len + 1; j++) { tmp[j] = '\0'; } 
+                } else {
+                    // TODO do i need to put what is in token into args? i dont think so but 2x check
+                    token_index = redir_found;
+                    token = NULL;
                 }
 		    }
             found_at = num_args;
@@ -43,20 +47,24 @@ void check_redir(char *token, int token_length) {
             while (token[tmp2_index] == ' ' && tmp2_index < token_length) { tmp2_index++; }
             int k = 0;
 		    char tmp2[MAX_LINE] = {'\0'};
-		    while (tmp2_index < token_length && token[tmp2_index] != '\n') {
-                if (/*token[tmp2_index] != '\n' && */token[tmp2_index] != ' ') {
+		    while (tmp2_index < token_length) { 
+                if (token[tmp2_index] != '\n' && token[tmp2_index] != ' ') {
                     tmp2[k] = token[tmp2_index]; 
 		            tmp2_index++; 
                     k++;
-                    if (token[tmp2_index - 1] == '>') {
+                    if (token[tmp2_index] == '>') {
                         args[num_args] = malloc(strlen(tmp2));
                         strncpy(args[num_args], tmp2, strlen(tmp2));
                         num_args++;
                         tmp2_index++;
                         k = 0;
                         for (int c = 0; c < tmp2_index + 1; c++) { tmp2[c] = '\0'; } 
-                    }
-                } else if (token[tmp2_index] == ' ' && tmp2 != '\0') {
+                    } 
+                    //tmp2[k] = token[tmp2_index]; 
+		            //tmp2_index++; 
+                    //k++;
+                   
+                } else if (token[tmp2_index] == ' ' && tmp2 != NULL) {
                     int tmp2_len = strlen(tmp2);
                     args[num_args] = malloc(tmp2_len);
                     strncpy(args[num_args], tmp2, tmp2_len);
@@ -65,15 +73,16 @@ void check_redir(char *token, int token_length) {
                     k = 0;
                     for (int c = 0; c < tmp2_len + 1; c++) { tmp2[c] = '\0'; } 
                 } else if (token[tmp2_index] == '\0' || token[tmp2_index] == '\n') {
-                    if (tmp2[0] != '\0' && tmp2[0] != '\n') {
-                        args[num_args] = malloc(strlen(tmp2));
-                        strncpy(args[num_args], tmp2, strlen(tmp2));
-                    }
+                    args[num_args] = malloc(strlen(tmp2));
+                    strncpy(args[num_args], tmp2, strlen(tmp2));
                     tmp2_index = token_length;
                     token = NULL;
                 } 
             }
-	    } else if (redir_in_args != found_at) {
+        } else if (token[redir_found] == '\n') {
+            token = NULL;
+        }
+	    if (redir_in_args != found_at) {
             redir_found++;
         }
 	}

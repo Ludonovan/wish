@@ -4,7 +4,7 @@
 #define MAX_INPUT 100
 
 extern int lineNum;
-extern char input[MAX_INPUT];
+char input[MAX_INPUT] = { '\0' };
 
 // interactive mode
 int interactive() {

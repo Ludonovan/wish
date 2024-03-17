@@ -27,7 +27,7 @@ void exec_cmd(char *PATH[MAX_PATH], char **exec_args) { // execute other command
 	        exit(1);
         } else if (exec_args[found_at + 2] != NULL) {
             print_error();
-            exit(0);
+            exit(1);
         } else if (found_at != -1 && exec_args[found_at + 1] != NULL) {
             close(STDOUT_FILENO);
             char *file_out = exec_args[found_at + 1];
@@ -64,7 +64,7 @@ void exec_cmd(char *PATH[MAX_PATH], char **exec_args) { // execute other command
             free(output);
         } else if (exec_args[found_at + 1] == NULL) {
             print_error();
-            exit(0);
+            exit(1);
         }
     }
     

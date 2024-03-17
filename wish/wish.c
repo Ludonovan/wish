@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include "batch.h"
 #include "interactive.h"
+#include "exec.h"
 #define MAX_ARGS 20
 
 int lineNum;
@@ -16,8 +17,8 @@ int main(int argc, char *argv[]) {
     } else if (argc == 2) {	
         batch(filename);
     } else {
-       write(STDERR_FILENO, error_message, sizeof(error_message));
-       exit(1);
+        print_error();
+        exit(1);
     } 
     return 0;
 }

@@ -20,8 +20,8 @@ int found_at = -1; // where in args '>' is
 void check_redir(char *token, int token_length) { 
 	int redir_found = 0; // where in token redir is
 	int redir_in_args;
-    while (token != NULL && redir_found < token_length) {
-	    if (token[redir_found] != '\n' && token[redir_found] == '>') {
+    while (token != NULL && redir_found < token_length && token[redir_found] != '\n') {
+	    if (token[redir_found] == '>') {
             char tmp[MAX_LINE] = {'\0'};
             int tmp_index = 0;
 		    for (int token_index = 0; token_index <= redir_found; token_index++) { // make string of chars before '>'
@@ -43,12 +43,12 @@ void check_redir(char *token, int token_length) {
             while (token[tmp2_index] == ' ' && tmp2_index < token_length) { tmp2_index++; }
             int k = 0;
 		    char tmp2[MAX_LINE] = {'\0'};
-		    while (tmp2_index < token_length) {
-                if (token[tmp2_index] != '\n' && token[tmp2_index] != ' ') {
+		    while (tmp2_index < token_length && token[tmp2_index] != '\n') {
+                if (/*token[tmp2_index] != '\n' && */token[tmp2_index] != ' ') {
                     tmp2[k] = token[tmp2_index]; 
 		            tmp2_index++; 
                     k++;
-                    if (token[tmp2_index] == '>') {
+                    if (token[tmp2_index - 1] == '>') {
                         args[num_args] = malloc(strlen(tmp2));
                         strncpy(args[num_args], tmp2, strlen(tmp2));
                         num_args++;
@@ -73,8 +73,7 @@ void check_redir(char *token, int token_length) {
                     token = NULL;
                 } 
             }
-	    }
-        if (redir_in_args != found_at) {
+	    } else if (redir_in_args != found_at) {
             redir_found++;
         }
 	}

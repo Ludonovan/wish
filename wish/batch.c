@@ -37,8 +37,6 @@ void check_redir(char *token, int token_length) {
                     for (int j = 0; j < tmp_len + 1; j++) { tmp[j] = '\0'; } 
                 }
 		    }
-            
-             
             found_at = num_args;
             redir_in_args = found_at;
 		    int tmp2_index = redir_found;
@@ -66,12 +64,6 @@ void check_redir(char *token, int token_length) {
                     tmp2_index++;
                     k = 0;
                     for (int c = 0; c < tmp2_len + 1; c++) { tmp2[c] = '\0'; } 
-                /*} else if (token[tmp2_index] == '>') {
-                    args[num_args] = malloc(strlen(tmp2));
-                    strncpy(args[num_args], tmp2, strlen(tmp2));
-                    num_args++;
-                    tmp2_index++;
-                    //k = 0;*/
                 } else if (token[tmp2_index] == '\0' || token[tmp2_index] == '\n') {
                     if (tmp2[0] != '\0' && tmp2[0] != '\n') {
                         args[num_args] = malloc(strlen(tmp2));

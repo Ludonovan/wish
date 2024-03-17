@@ -7,10 +7,10 @@
 #include "batch.h"
 
 #define MAX_PATH 20
+#define MAX_LINE 50
 
 extern int num_args;
 extern int found_at;
-extern int valid_redir;
 extern char error_message[30];
 extern char *PATH[MAX_PATH];
 
@@ -22,17 +22,47 @@ void print_error(){ write(STDERR_FILENO, error_message, strlen(error_message)); 
 
 void exec_cmd(char *PATH[MAX_PATH], char **exec_args) { // execute other commands
     if (exec_args[found_at] != NULL && strcmp(exec_args[found_at], ">") == 0) { 
-	    if (exec_args[found_at - 1] == NULL || exec_args[found_at] == NULL || exec_args[found_at + 1] != NULL) {
+	    if (exec_args[found_at - 1] == NULL || exec_args[found_at] == NULL || exec_args[found_at + 1] == NULL) {
 	        print_error();
 	        exit(1);
-	    } else if (found_at != -1 && valid_redir == 1 && exec_args[3] == NULL) {
+        } else if (exec_args[found_at + 2] != NULL) {
+            print_error();
+            exit(0);
+        } else if (found_at != -1 && exec_args[found_at + 1] != NULL) {
             close(STDOUT_FILENO);
-            char *output = malloc(strlen(exec_args[found_at + 1]) + 2);
-            strcat(output, "./");
-            strcat(output, exec_args[found_at + 1]);
+            char *file_out = exec_args[found_at + 1];
+            char *output = malloc(strlen(file_out) + 2);
+            // if output is in another directory: dir/file (/tmp/file)
+            // the output should be: dir/./file (/tmp/./file), not ./dir/file (.//tmp/file)
+            int contains = 0; // 0 if a '/' is not found, 1 if '/' is found.
+            int last_found = -1; // where the last '/' is found
+            for (int i = 0; i < strlen(file_out); i++) {
+                 if (file_out[i] == '/') {
+                     last_found = i;
+                     contains = 1;
+                 }
+            }
+            if (contains = 1 && last_found != -1) {
+                char tmp[MAX_LINE] = { '\0' };
+                int tmp_index = 0;
+                for (int i = 0; i < last_found; i++) {
+                    tmp[tmp_index] = file_out[i];
+                }
+                strncat(output, tmp, strlen(tmp));
+                strcat(output, ".");
+                char tmp2[MAX_LINE] = { '\0' };
+                int tmp2_index = 0;
+                for (int j = last_found + 1; j < strlen(file_out); j++) {
+                    tmp2[tmp2_index] = file_out[j];    
+                }
+                strncat(output, tmp2, strlen(tmp2));
+            } else { // otherwise output should be ./file
+                strcat(output, "./");
+            }
+            strcat(output, file_out);
             open(output, O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
             free(output);
-        } else if (valid_redir == 0 || exec_args[3] != NULL) {
+        } else if (exec_args[found_at + 1] == NULL) {
             print_error();
             exit(0);
         }
@@ -70,7 +100,6 @@ void exec_path(char **exec_args) { // path
 		        free(PATH[j]);
 	        PATH[j] = malloc(strlen(exec_args[j+1]) + 3);
 	        char *tmp = malloc(strlen(exec_args[j+1]) + 3);
-	        //strcpy(tmp, "/");
 	        strcat(tmp, exec_args[1]);
 	        strcpy(PATH[j], tmp);
 	        strcat(PATH[j], "/");
@@ -118,7 +147,7 @@ void exec(char **exec_args) {
 	if (found == MAX_PATH) {
 	    print_error();
 	    exit(0);
-	}
+    }
         int rc = fork();
         if (rc < 0) {
 	        print_error();

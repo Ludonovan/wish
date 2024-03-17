@@ -15,36 +15,21 @@ extern char error_message[30];
 char *args[MAX_ARGS] = { NULL };
 char *PATH[MAX_ARGS] = { NULL };
 int num_args; 
-int found_at = -1;
-int valid_redir = 0;
+int found_at = -1; // where in args '>' is
 
 void check_redir(char *token, int token_length) { 
-	int redir_found = 0; // 0 no redirection; 1 redirection
-	while (token != NULL && redir_found < token_length) {
-	    if (token[redir_found] != '\0' && token[redir_found] == '>') {
+	int redir_found = 0; // where in token redir is
+	int redir_in_args;
+    while (token != NULL && redir_found < token_length) {
+	    if (token[redir_found] != '\n' && token[redir_found] == '>') {
             char tmp[MAX_LINE] = {'\0'};
-            found_at = redir_found; // index where redirection was found
             int tmp_index = 0;
 		    for (int token_index = 0; token_index <= redir_found; token_index++) { // make string of chars before '>'
-		        if (token_index != redir_found) { // && token[token_index] != ' ') { 
+		        if (token_index != redir_found && token[token_index] != ' ') { // not a space 
                     tmp[tmp_index] = token[token_index];
                     if (token_index != redir_found - 1) { tmp_index++; } // dont increase token index if at char before '>'
-                //} else if (token[token_index] != ' ' || token_index == redir_found) { 
-                //    int tmp_len = strlen(tmp);
-                //    args[num_args] = malloc(tmp_len);
-		        //    strncpy(args[num_args], tmp, tmp_len); // add string to args
-                //    num_args++;
-                //    tmp_index = 0;
-                //    for (int j = 0; j < tmp_len + 1; j++) { tmp[j] = '\0'; } // clear tmp
-                } else if (token[token_index] == ' ') { // last char is a space
-                    int tmp_len = strlen(tmp) - 1;
-                    args[num_args] = malloc(tmp_len);
-		            strncpy(args[num_args], tmp, tmp_len); 
-                    num_args++;
-                    tmp_index = 0;
-                    for (int j = 0; j < tmp_len + 1; j++) { tmp[j] = '\0'; } 
-                } else { 
-                    int tmp_len = strlen(tmp); //remove space
+                } else { // anything but a space
+                    int tmp_len = strlen(tmp);
                     args[num_args] = malloc(tmp_len);
 		            strncpy(args[num_args], tmp, tmp_len); 
                     num_args++;
@@ -52,42 +37,55 @@ void check_redir(char *token, int token_length) {
                     for (int j = 0; j < tmp_len + 1; j++) { tmp[j] = '\0'; } 
                 }
 		    }
-
-            args[num_args] = malloc(strlen(tmp));
-		    strncpy(args[num_args], ">", strlen(">"));
-            num_args++;
-		    int j = found_at + 1;
+            
+             
+            found_at = num_args;
+            redir_in_args = found_at;
+		    int tmp2_index = redir_found;
+            while (token[tmp2_index] == ' ' && tmp2_index < token_length) { tmp2_index++; }
             int k = 0;
 		    char tmp2[MAX_LINE] = {'\0'};
-            int redir_err = 0;
-		    while (token[j] != '\0' && j < token_length - 1) {
-		        if (token[j] != '\n') {
-                    tmp2[k] = token[j];
-		            j++; 
+		    while (tmp2_index < token_length) {
+                if (token[tmp2_index] != '\n' && token[tmp2_index] != ' ') {
+                    tmp2[k] = token[tmp2_index]; 
+		            tmp2_index++; 
                     k++;
-                } else if (token[j] == '>') {
-                    redir_err = 1;
-                    write(STDERR_FILENO, error_message, sizeof(error_message));
-                    exit(0);
-                } else if (token[j] == ' ') {
+                    if (token[tmp2_index] == '>') {
+                        args[num_args] = malloc(strlen(tmp2));
+                        strncpy(args[num_args], tmp2, strlen(tmp2));
+                        num_args++;
+                        tmp2_index++;
+                        k = 0;
+                        for (int c = 0; c < tmp2_index + 1; c++) { tmp2[c] = '\0'; } 
+                    }
+                } else if (token[tmp2_index] == ' ' && tmp2 != '\0') {
+                    int tmp2_len = strlen(tmp2);
+                    args[num_args] = malloc(tmp2_len);
+                    strncpy(args[num_args], tmp2, tmp2_len);
                     num_args++;
-                    j++;
-                    k++;
-                } else { 
+                    tmp2_index++;
+                    k = 0;
+                    for (int c = 0; c < tmp2_len + 1; c++) { tmp2[c] = '\0'; } 
+                /*} else if (token[tmp2_index] == '>') {
                     args[num_args] = malloc(strlen(tmp2));
                     strncpy(args[num_args], tmp2, strlen(tmp2));
-                }
-		    }
-            if (args[num_args] != NULL && strcmp(args[num_args], "") != 0 
-                    && args[num_args + 1] == NULL && redir_err == 0) {
-                valid_redir = 1;
+                    num_args++;
+                    tmp2_index++;
+                    //k = 0;*/
+                } else if (token[tmp2_index] == '\0' || token[tmp2_index] == '\n') {
+                    if (tmp2[0] != '\0' && tmp2[0] != '\n') {
+                        args[num_args] = malloc(strlen(tmp2));
+                        strncpy(args[num_args], tmp2, strlen(tmp2));
+                    }
+                    tmp2_index = token_length;
+                    token = NULL;
+                } 
             }
 	    }
-        if (found_at != redir_found) {
-	        redir_found++;
-        } else { break; }
+        if (redir_in_args != found_at) {
+            redir_found++;
+        }
 	}
-
 }
 
 
@@ -117,7 +115,6 @@ void parse(FILE *file) {
     while (token != NULL && num_args < MAX_ARGS - 1 && found_at == -1) {
         token_length = strlen(token);
         args[num_args] = malloc(token_length);
-        check_redir(token, token_length);
         strncpy(args[num_args], token, token_length);
         next_arg = args[num_args];
         num_args++;
@@ -149,7 +146,7 @@ int batch(char *filename) {
 */
     
     PATH[0] = malloc(strlen("/bin/") + 1);
-    strcpy(PATH[0], "/bin/"); // why is this wrong? seems to be working ok
+    strcpy(PATH[0], "/bin/"); 
     do {
         parse(file);
 	    if (strcmp(args[0], "path") != 0 && PATH[0] != NULL) {

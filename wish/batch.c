@@ -20,14 +20,23 @@ int found_at = -1; // where in args '>' is
 void check_redir(char *token, int token_length) { 
 	int redir_found = 0; // where in token redir is
 	int redir_in_args;
-    while (token != NULL && redir_found < token_length) {
+    int end = 0;
+    while (redir_found < token_length && end == 0) {
 	    if (token[redir_found] == '>') {
             char tmp[MAX_LINE] = {'\0'};
             int tmp_index = 0;
-		    for (int token_index = 0; token_index <= redir_found; token_index++) { // make string of chars before '>'
+            int token_index = 0;
+		    while (end == 0 && token_index <= redir_found) { // make string of chars before '>'
 		        if (token[token_index] != ' ' && token[token_index] != '\n') {  
                     tmp[tmp_index] = token[token_index];
-                    if (token_index != redir_found - 1) { tmp_index++; } // dont increase token index if at char before '>'
+                    if (token_index != redir_found - 1) { 
+                        tmp_index++;
+                    } else {
+                        args[num_args] = malloc(strlen(tmp));
+                        strncpy(args[num_args], tmp, strlen(tmp));
+                        num_args++;
+                        end = 1;
+                    }
                 } else if (token[token_index] == ' ' ) {  
                     int tmp_len = strlen(tmp);
                     args[num_args] = malloc(tmp_len);
@@ -36,10 +45,10 @@ void check_redir(char *token, int token_length) {
                     tmp_index = 0;
                     for (int j = 0; j < tmp_len + 1; j++) { tmp[j] = '\0'; } 
                 } else {
-                    // TODO do i need to put what is in token into args? i dont think so but 2x check
-                    token_index = redir_found;
-                    token = NULL;
+                    //token_index = redir_found;
+                    end = 1;
                 }
+                token_index++;
 		    }
             found_at = num_args;
             redir_in_args = found_at;
@@ -47,24 +56,19 @@ void check_redir(char *token, int token_length) {
             while (token[tmp2_index] == ' ' && tmp2_index < token_length) { tmp2_index++; }
             int k = 0;
 		    char tmp2[MAX_LINE] = {'\0'};
-		    while (tmp2_index < token_length) { 
+		    while (end == 0 && tmp2_index < token_length) { 
                 if (token[tmp2_index] != '\n' && token[tmp2_index] != ' ') {
                     tmp2[k] = token[tmp2_index]; 
 		            tmp2_index++; 
                     k++;
-                    if (token[tmp2_index] == '>') {
+                    if (token[tmp2_index - 1] == '>') {
                         args[num_args] = malloc(strlen(tmp2));
                         strncpy(args[num_args], tmp2, strlen(tmp2));
                         num_args++;
-                        tmp2_index++;
                         k = 0;
                         for (int c = 0; c < tmp2_index + 1; c++) { tmp2[c] = '\0'; } 
                     } 
-                    //tmp2[k] = token[tmp2_index]; 
-		            //tmp2_index++; 
-                    //k++;
-                   
-                } else if (token[tmp2_index] == ' ' && tmp2 != NULL) {
+                } else if (token[tmp2_index] == ' ' && tmp2[0] != '\0') {
                     int tmp2_len = strlen(tmp2);
                     args[num_args] = malloc(tmp2_len);
                     strncpy(args[num_args], tmp2, tmp2_len);
@@ -72,15 +76,18 @@ void check_redir(char *token, int token_length) {
                     tmp2_index++;
                     k = 0;
                     for (int c = 0; c < tmp2_len + 1; c++) { tmp2[c] = '\0'; } 
-                } else if (token[tmp2_index] == '\0' || token[tmp2_index] == '\n') {
+                } else if (token[tmp2_index] == '\n' && tmp2[0] != '\0') {
                     args[num_args] = malloc(strlen(tmp2));
                     strncpy(args[num_args], tmp2, strlen(tmp2));
                     tmp2_index = token_length;
-                    token = NULL;
+                    end = 1;
+                } else {
+                    //tmp2_index = token_length;
+                    end = 1; 
                 } 
             }
         } else if (token[redir_found] == '\n') {
-            token = NULL;
+           break; 
         } else if (redir_in_args != found_at) {
             redir_found++;
         }

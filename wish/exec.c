@@ -13,6 +13,7 @@
 extern int num_args;
 extern int found_at;
 extern int in_path;
+extern int path_changed;
 extern char error_message[30];
 extern char *PATH[MAX_PATH];
 
@@ -70,7 +71,12 @@ void exec_cmd(char *PATH[MAX_PATH], char **exec_args) { // execute other command
     }
     
     if (execv(PATH[found], exec_args) != 0) { 
+//        for (int i = 0; i < in_path; i++) {
+//           PATH[i] = NULL;
+//        }
+//        in_path = 0; 
         print_error();
+        //printf("exec failed with path: %s and args: %s\n", PATH[found], *exec_args);
         exit(1);
     } 
     next_arg = NULL;
@@ -91,7 +97,7 @@ void exec_cd(char **exec_args) { // cd
     }
 
     // make path orginial without "cd"
-    strcpy(PATH[0], strtok(PATH[0], "cd"));
+    //strcpy(PATH[0], strtok(PATH[0], "cd"));
 }
 
 int in_path = 1;
@@ -134,19 +140,27 @@ void exec_exit(char **exec_args) { // exit
 void exec(char **exec_args) {
     if (strcmp(exec_args[0], "cd") != 0 &&
         strcmp(exec_args[0], "path") != 0 &&
-        strcmp(exec_args[0], "exit") != 0) {
+        strcmp(exec_args[0], "exit") != 0  
+        ) {
         found = -1;
         for (int i = 0; i < MAX_PATH; i++) {
     	    if (PATH[i] != NULL && access(PATH[i], X_OK) == 0) {
 	            found = i;
 	        }
         }
-    }
-    if (found == -1) {
-        PATH[0] = NULL;
-        PATH[0] = "/bin/";
+    } 
+    /*if (found == -1) {
+        int ps = strlen(exec_args[0]) + strlen("/bin/");
+        char *p = malloc(ps);
+        for (int i = 0; i < in_path; i++) {
+            PATH[i] = NULL;
+        }
+        PATH[0] = malloc(ps + 1);
+        strcpy(PATH[0], strcat(p, exec_args[0]));
         found = 0;
-    }
+        in_path = 1;
+        free(p);
+    }*/
 
 
     if(exec_args[0] == NULL) {
@@ -171,7 +185,7 @@ void exec(char **exec_args) {
         } else if (rc == 0) {
             exec_cmd(PATH, exec_args);
         } else {
-	        wait(NULL);
+            wait(NULL);
         }
     }
 }

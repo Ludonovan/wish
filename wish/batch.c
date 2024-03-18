@@ -164,7 +164,8 @@ int batch(char *filename) {
             }
 	    }
         exec(args);
-        if (path_changed != 0 && in_path > 1) {
+        
+        if (path_changed != 0 && in_path > 0) {
             for (int i = 0; i < in_path; i++) {
                 int chop = strlen(PATH[i]) - strlen(args[0]);
                 PATH[i][chop] = '\0';

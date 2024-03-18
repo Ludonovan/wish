@@ -127,7 +127,11 @@ void parse(FILE *file) {
         token = strtok(NULL, " \t \n");
         
     }
-
+    if (args[0] == NULL) {
+        args[0] = malloc(strlen(" "));
+        args[0] = " ";
+        next_arg = " ";
+    } 
     free(line); 
 }
 
@@ -152,7 +156,8 @@ int batch(char *filename) {
 */
     
     PATH[0] = malloc(strlen("/bin/") + 1);
-    strcpy(PATH[0], "/bin/"); 
+    strcpy(PATH[0], "/bin/");
+      
     do {
         parse(file);
 	    if (strcmp(args[0], "path") != 0 && PATH[0] != NULL) {
@@ -163,7 +168,8 @@ int batch(char *filename) {
                 path_changed = 1;
             }
 	    }
-        exec(args);
+        if (args[0] != " ") 
+            exec(args);
         
         if (path_changed != 0 && in_path > 0) {
             for (int i = 0; i < in_path; i++) {

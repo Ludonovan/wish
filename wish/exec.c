@@ -69,18 +69,18 @@ void exec_cmd(char *PATH[MAX_PATH], char **exec_args) { // execute other command
             exit(1);
         }
     }
-    
+
     if (execv(PATH[found], exec_args) != 0) { 
 //        for (int i = 0; i < in_path; i++) {
 //           PATH[i] = NULL;
 //        }
 //        in_path = 0; 
         print_error();
+        next_arg = " ";
         //printf("exec failed with path: %s and args: %s\n", PATH[found], *exec_args);
         exit(1);
-    } 
+    }  
     next_arg = NULL;
-    
 }
 
 

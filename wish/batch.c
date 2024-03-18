@@ -10,12 +10,14 @@
 
 extern char *next_arg;
 extern int lineNum;
+extern int in_path;
 extern char error_message[30];
 
 char *args[MAX_ARGS] = { NULL };
 char *PATH[MAX_ARGS] = { NULL };
 int num_args; 
 int found_at = -1; // where in args '>' is
+int path_changed = 0;
 
 void check_redir(char *token, int token_length) { 
 	int redir_found = 0; // where in token redir is
@@ -45,7 +47,6 @@ void check_redir(char *token, int token_length) {
                     tmp_index = 0;
                     for (int j = 0; j < tmp_len + 1; j++) { tmp[j] = '\0'; } 
                 } else {
-                    //token_index = redir_found;
                     end = 1;
                 }
                 token_index++;
@@ -82,7 +83,6 @@ void check_redir(char *token, int token_length) {
                     tmp2_index = token_length;
                     end = 1;
                 } else {
-                    //tmp2_index = token_length;
                     end = 1; 
                 } 
             }
@@ -157,12 +157,19 @@ int batch(char *filename) {
         parse(file);
 	    if (strcmp(args[0], "path") != 0 && PATH[0] != NULL) {
             int i = 0;
-            while (i < num_args && PATH[i] != NULL) {
-                strcat(PATH[i], args[i]);
+            while (i < in_path && PATH[i] != NULL) {
+                strcat(PATH[i], args[0]);
                 i++;
+                path_changed = 1;
             }
 	    }
         exec(args);
+        if (path_changed != 0 && in_path > 1) {
+            for (int i = 0; i < in_path; i++) {
+                int chop = strlen(PATH[i]) - strlen(args[0]);
+                PATH[i][chop] = '\0';
+            }
+        }
     }
     while (args[0] != NULL && next_arg != NULL);
     

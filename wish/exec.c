@@ -5,18 +5,19 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include "batch.h"
+#include "exec.h"
 
 #define MAX_PATH 20
 #define MAX_LINE 50
 
 extern int num_args;
 extern int found_at;
+extern int in_path;
 extern char error_message[30];
 extern char *PATH[MAX_PATH];
 
 char *next_arg;
 int found = 0;
-
 
 void print_error(){ write(STDERR_FILENO, error_message, strlen(error_message)); }
 
@@ -73,6 +74,7 @@ void exec_cmd(char *PATH[MAX_PATH], char **exec_args) { // execute other command
         exit(1);
     } 
     next_arg = NULL;
+    
 }
 
 
@@ -130,11 +132,22 @@ void exec_exit(char **exec_args) { // exit
 
 
 void exec(char **exec_args) {
-    for (int i = 0; i < MAX_PATH; i++) {
-    	if (PATH[i] != NULL && access(PATH[i], X_OK) == 0) {
-	        found = i;
-	    }
+    if (strcmp(exec_args[0], "cd") != 0 &&
+        strcmp(exec_args[0], "path") != 0 &&
+        strcmp(exec_args[0], "exit") != 0) {
+        found = -1;
+        for (int i = 0; i < MAX_PATH; i++) {
+    	    if (PATH[i] != NULL && access(PATH[i], X_OK) == 0) {
+	            found = i;
+	        }
+        }
     }
+    if (found == -1) {
+        PATH[0] = NULL;
+        PATH[0] = "/bin/";
+        found = 0;
+    }
+
 
     if(exec_args[0] == NULL) {
 	    exit(0);

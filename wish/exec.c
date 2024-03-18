@@ -69,12 +69,7 @@ void exec_cmd(char *PATH[MAX_PATH], char **exec_args) { // execute other command
             exit(1);
         }
     }
-
     if (execv(PATH[found], exec_args) != 0) { 
-//        for (int i = 0; i < in_path; i++) {
-//           PATH[i] = NULL;
-//        }
-//        in_path = 0; 
         print_error();
         next_arg = " ";
         //printf("exec failed with path: %s and args: %s\n", PATH[found], *exec_args);
@@ -95,9 +90,6 @@ void exec_cd(char **exec_args) { // cd
 	next_arg = NULL;
         exit(0);
     }
-
-    // make path orginial without "cd"
-    //strcpy(PATH[0], strtok(PATH[0], "cd"));
 }
 
 int in_path = 1;
@@ -149,19 +141,6 @@ void exec(char **exec_args) {
 	        }
         }
     } 
-    /*if (found == -1) {
-        int ps = strlen(exec_args[0]) + strlen("/bin/");
-        char *p = malloc(ps);
-        for (int i = 0; i < in_path; i++) {
-            PATH[i] = NULL;
-        }
-        PATH[0] = malloc(ps + 1);
-        strcpy(PATH[0], strcat(p, exec_args[0]));
-        found = 0;
-        in_path = 1;
-        free(p);
-    }*/
-
 
     if(exec_args[0] == NULL) {
 	    exit(0);

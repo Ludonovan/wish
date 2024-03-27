@@ -18,6 +18,44 @@ char *PATH[MAX_ARGS] = { NULL };
 int num_args; 
 int found_at = -1; // where in args '>' is
 int path_changed = 0;
+int args_index = 0; // used for parallel processes. 
+
+
+void check_parallel() {
+    int has_parallel = 0;
+    int i = 0;
+    while (args[i] != NULL) {
+        if (strcmp(args[i], "&") == 0) {
+            has_parallel = 1;
+            break;
+        }
+        i++;
+    }
+
+    if (has_parallel == 1) { 
+        // TODO handle parallel commands 
+        char *p_args[num_args];  
+        p_args[0] = malloc(sizeof(args[args_index])); 
+        p_args[0] = args[args_index]; 
+        for (int a = 1; a < num_args; a++) { p_args[a] = NULL; }  
+        int args_index = 0; 
+        do { 
+            if (strcmp(args[args_index], "&") == 0) { 
+                args_index++;  
+            } else if (args[args_index+1] == NULL) { 
+                exec(p_args); 
+            } else if (strcmp(args[args_index+1], "&") == 0) { 
+                p_args[0] = args[args_index]; 
+                p_args[1] = NULL; 
+                exec(p_args);
+                args_index++; 
+            } else { 
+                print_error();  
+            } 
+        } while(p_args != NULL && args_index < num_args); 
+    }
+}
+
 
 void check_redir(char *token, int token_length) { 
 	int redir_found = 0; // where in token redir is
@@ -116,7 +154,7 @@ void parse(FILE *file) {
     check_redir(line, strlen(line));	
 
     // Tokenize the line
-    token = strtok(line, " \t \n >");
+    token = strtok(line, " \t \n > ");
 
     while (token != NULL && num_args < MAX_ARGS - 1 && found_at == -1) {
         token_length = strlen(token);
@@ -157,9 +195,10 @@ int batch(char *filename) {
     
     PATH[0] = malloc(strlen("/bin/") + 1);
     strcpy(PATH[0], "/bin/");
-      
+
     do {
         parse(file);
+        check_parallel();
 	    if (strcmp(args[0], "path") != 0 && PATH[0] != NULL) {
             int i = 0;
             while (i < in_path && PATH[i] != NULL) {
@@ -168,7 +207,7 @@ int batch(char *filename) {
                 path_changed = 1;
             }
 	    }
-        if (args[0] != " ") 
+        if (args[0] != " ")
             exec(args);
         
         if (path_changed != 0 && in_path > 0) {

@@ -18,7 +18,7 @@ extern char error_message[30];
 extern char *PATH[MAX_PATH];
 
 char *next_arg;
-int found = 0;
+int found = 0; // path where access() does not fail
 
 void print_error(){ write(STDERR_FILENO, error_message, strlen(error_message)); }
 
@@ -69,12 +69,17 @@ void exec_cmd(char *PATH[MAX_PATH], char **exec_args) { // execute other command
             exit(1);
         }
     }
-    if (execv(PATH[found], exec_args) != 0) { 
-        print_error();
-        next_arg = " ";
-        //printf("exec failed with path: %s and args: %s\n", PATH[found], *exec_args);
-        exit(1);
-    }  
+    if (strcmp(exec_args[0], "&") != 0) {
+        if (execv(PATH[found], exec_args) != 0) { 
+            print_error();
+            next_arg = " ";
+            //printf("exec failed with path: %s and args: %s\n", PATH[found], *exec_args);
+            exit(1);
+        }
+    } else {
+        // input starts with &
+        exit(0);
+    }
     next_arg = NULL;
 }
 
@@ -128,7 +133,6 @@ void exec_exit(char **exec_args) { // exit
     }
 }
 
-
 void exec(char **exec_args) {
     if (strcmp(exec_args[0], "cd") != 0 &&
         strcmp(exec_args[0], "path") != 0 &&
@@ -140,32 +144,43 @@ void exec(char **exec_args) {
 	            found = i;
 	        }
         }
-    } 
-
-    if(exec_args[0] == NULL) {
-	    exit(0);
+    }
+    
+    if (strcmp(exec_args[0], "&") == 0) {
+        exit(0);
     }
 
     if (strcmp(exec_args[0], "cd") == 0) {
         exec_cd(exec_args);
     } else if (strcmp(exec_args[0], "path") == 0) {
-        exec_path(exec_args);	
+        exec_path(exec_args);
     } else if (strcmp(exec_args[0], "exit") == 0) {
         exec_exit(exec_args);
     } else {
-	if (found == MAX_PATH) {
-	    print_error();
-	    exit(0);
-    }
+        found = -1;
+        for (int i = 0; i < MAX_PATH; i++) {
+            if (PATH[i] != NULL && access(PATH[i], X_OK) == 0) {
+                found = i;
+                break;
+            }
+        }
+
+        if (found == MAX_PATH) {
+            print_error();
+            exit(0);
+        }
+
         int rc = fork();
         if (rc < 0) {
-	        print_error();
-	        exit(1);
+            print_error();
+            exit(1);
         } else if (rc == 0) {
             exec_cmd(PATH, exec_args);
         } else {
-            wait(NULL);
+            int status;
+            waitpid(rc, &status, 0);
         }
     }
+    
 }
 

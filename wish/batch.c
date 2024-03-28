@@ -19,10 +19,9 @@ int num_args;
 int found_at = -1; // where in args '>' is
 int path_changed = 0;
 int args_index = 0; // used for parallel processes. 
-
+int has_parallel = 0;
 
 void check_parallel() {
-    int has_parallel = 0;
     int i = 0;
     while (args[i] != NULL) {
         if (strcmp(args[i], "&") == 0) {
@@ -31,28 +30,42 @@ void check_parallel() {
         }
         i++;
     }
+    if (i == 0) { exit(0); }
 
     if (has_parallel == 1) { 
         // TODO handle parallel commands 
         char *p_args[num_args];  
-        p_args[0] = malloc(sizeof(args[args_index])); 
-        p_args[0] = args[args_index]; 
-        for (int a = 1; a < num_args; a++) { p_args[a] = NULL; }  
-        int args_index = 0; 
-        do { 
+        do {
+            if (strcmp(args[args_index], "&") == 0 && args[args_index+1] != NULL) {
+                args_index++;
+            }
+            p_args[0] = malloc(sizeof(args[args_index])); 
+            p_args[0] = args[args_index];
+
+            if (strcmp(p_args[0], "&") == 0) {
+                exit(0);
+            }
+
+            for (int a = 1; a < num_args; a++) { p_args[a] = NULL; } 
+
+            char *old = malloc(sizeof(PATH[0]));
+            strcpy(old, PATH[0]);
+            strcat(PATH[0], p_args[0]);
+            
             if (strcmp(args[args_index], "&") == 0) { 
                 args_index++;  
-            } else if (args[args_index+1] == NULL) { 
+            } else if (args[args_index+1] == NULL) {
                 exec(p_args); 
-            } else if (strcmp(args[args_index+1], "&") == 0) { 
+            } else { 
                 p_args[0] = args[args_index]; 
-                p_args[1] = NULL; 
+                p_args[1] = NULL;
                 exec(p_args);
                 args_index++; 
-            } else { 
-                print_error();  
             } 
-        } while(p_args != NULL && args_index < num_args); 
+            PATH[0] = NULL;
+            PATH[0] = malloc(strlen(old));
+            strcpy(PATH[0], old);
+        } while(args_index < num_args); 
     }
 }
 
@@ -207,7 +220,7 @@ int batch(char *filename) {
                 path_changed = 1;
             }
 	    }
-        if (args[0] != " ")
+        if (args[0] != " " && has_parallel == 0)
             exec(args);
         
         if (path_changed != 0 && in_path > 0) {

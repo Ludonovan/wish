@@ -2,25 +2,35 @@
 #include <stdlib.h>
 #include <string.h>
 #include "batch.h"
+
 #define MAX_INPUT 100
 
-extern int lineNum;
-char input[MAX_INPUT];  
+extern char error_message[30];
 
 // interactive mode
 int interactive() {
     while(1) {
         printf("wish> ");
-        scanf("%s" , input);
+        char input[MAX_INPUT];
+        fgets(input, sizeof(input), stdin);
+        input[strcspn(input, "\n")] = '\0';
+
         if (input == NULL) {
             printf("Error reading input.\n");
             exit(1);
         } else {
-	        // exit
-	        if (strcmp(input, "exit") == 0 ) {
+            if (strcmp(input, "exit") == 0) {
                 exit(0);
             } else {
-               // TODO create file, put input into file, clear file after running 
+                FILE *file = fopen("out", "w");
+                if (file == NULL) {
+                    printf("Error creating file.\n");
+                    exit(1);
+                }
+                fprintf(file, "%s\n", input);
+                fclose(file);
+                batch("out");
+                remove("out");
             }
         } 
     }

@@ -15,5 +15,5 @@ exec.o: exec.c
 	gcc -c -g exec.c
 
 clean: 
-	rm -f *.o wish 
+	rm -f *.o wish out 
 	clear

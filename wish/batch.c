@@ -38,7 +38,7 @@ void check_parallel() {
         do {
             if (strcmp(args[args_index], "&") == 0 && args[args_index+1] != NULL) {
                 args_index++;
-            }
+            } 
             p_args[0] = malloc(sizeof(args[args_index])); 
             p_args[0] = args[args_index];
 
@@ -52,16 +52,15 @@ void check_parallel() {
             strcpy(old, PATH[0]);
             strcat(PATH[0], p_args[0]);
             
-            if (strcmp(args[args_index], "&") == 0) { 
-                args_index++;  
-            } else if (args[args_index+1] == NULL) {
-                exec(p_args); 
+            if (args[args_index+1] == NULL) {
+                exec(p_args);
+                exit(0); 
             } else { 
                 p_args[0] = args[args_index]; 
                 p_args[1] = NULL;
                 exec(p_args);
-                args_index++; 
-            } 
+            }
+            args_index++; 
             PATH[0] = NULL;
             PATH[0] = malloc(strlen(old));
             strcpy(PATH[0], old);

@@ -21,8 +21,9 @@ int path_changed = 0;
 int args_index = 0; // used for parallel processes. 
 int has_parallel = 0;
 
+
 void check_parallel() {
-    int i = 0;
+/*    int i = 0;
     while (args[i] != NULL) {
         if (strcmp(args[i], "&") == 0) {
             has_parallel = 1;
@@ -31,9 +32,8 @@ void check_parallel() {
         i++;
     }
     if (i == 0) { exit(0); }
-
+*/
     if (has_parallel == 1) { 
-        // TODO handle parallel commands 
         char *p_args[num_args];  
         do {
             if (strcmp(args[args_index], "&") == 0 && args[args_index+1] != NULL) {
@@ -163,10 +163,24 @@ void parse(FILE *file) {
         free(line);
         exit(0);
     }
-    check_redir(line, strlen(line));	
+    check_redir(line, strlen(line));
+
+
+    int i = 0;
+    while (line[i] != '\0' && line[i] != '\n' && i < strlen(line) - 1) {
+        if (line[i] == '&') {
+            has_parallel = 1;
+            break;
+        }
+        i++;
+    }
+    if (i == 0) { exit(0); }
+    //check_parallel();
+
+
 
     // Tokenize the line
-    token = strtok(line, " \t \n > ");
+    token = strtok(line, " \t \n > &");
 
     while (token != NULL && num_args < MAX_ARGS - 1 && found_at == -1) {
         token_length = strlen(token);
@@ -174,14 +188,13 @@ void parse(FILE *file) {
         strncpy(args[num_args], token, token_length);
         next_arg = args[num_args];
         num_args++;
-        token = strtok(NULL, " \t \n");
-        
+        token = strtok(NULL, " \t \n & ");
     }
     if (args[0] == NULL) {
         args[0] = malloc(strlen(" "));
         args[0] = " ";
         next_arg = " ";
-    } 
+    }
     free(line); 
 }
 

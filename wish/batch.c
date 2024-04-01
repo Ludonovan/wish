@@ -23,16 +23,6 @@ int has_parallel = 0;
 
 
 void check_parallel() {
-/*    int i = 0;
-    while (args[i] != NULL) {
-        if (strcmp(args[i], "&") == 0) {
-            has_parallel = 1;
-            break;
-        }
-        i++;
-    }
-    if (i == 0) { exit(0); }
-*/
     if (has_parallel == 1) { 
         char *p_args[num_args];  
         do {
@@ -108,7 +98,7 @@ void check_redir(char *token, int token_length) {
             int k = 0;
 		    char tmp2[MAX_LINE] = {'\0'};
 		    while (end == 0 && tmp2_index < token_length) { 
-                if (token[tmp2_index] != '\n' && token[tmp2_index] != ' ') {
+                if ((token[tmp2_index] != '\n' && token[tmp2_index] != ' ')) {
                     tmp2[k] = token[tmp2_index]; 
 		            tmp2_index++; 
                     k++;
@@ -118,6 +108,11 @@ void check_redir(char *token, int token_length) {
                         num_args++;
                         k = 0;
                         for (int c = 0; c < tmp2_index + 1; c++) { tmp2[c] = '\0'; } 
+                    } else if (token[tmp2_index] == '&') {
+                        args[num_args] = malloc(strlen(tmp2));
+                        strncpy(args[num_args], tmp2, strlen(tmp2));
+                        num_args++;
+                        end = 1;
                     } 
                 } else if (token[tmp2_index] == ' ' && tmp2[0] != '\0') {
                     int tmp2_len = strlen(tmp2);
@@ -175,9 +170,6 @@ void parse(FILE *file) {
         i++;
     }
     if (i == 0) { exit(0); }
-    //check_parallel();
-
-
 
     // Tokenize the line
     token = strtok(line, " \t \n > &");

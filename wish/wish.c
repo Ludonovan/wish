@@ -13,7 +13,9 @@ int main(int argc, char *argv[]) {
     lineNum = 1;
 
     if (argc < 2) {
-         interactive();
+        while (1) {
+            interactive();
+        }
     } else if (argc == 2) {
         if (access(argv[1], F_OK) == 0) {
             batch(argv[1]);

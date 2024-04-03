@@ -7,6 +7,7 @@
 
 #define MAX_LINE 50
 #define MAX_ARGS 20
+#define MAX_COMMANDS 10
 
 extern char *next_arg;
 extern int lineNum;
@@ -15,12 +16,13 @@ extern char error_message[30];
 
 char *args[MAX_ARGS] = { NULL };
 char *PATH[MAX_ARGS] = { NULL };
+char **commands[MAX_COMMANDS] = { NULL };
 int num_args; 
 int found_at = -1; // where in args '>' is
 int path_changed = 0;
 int args_index = 0; // used for parallel processes. 
 int has_parallel = 0;
-
+int num_commands = 0;
 
 void check_parallel() {
     if (has_parallel == 1) { 
@@ -41,7 +43,6 @@ void check_parallel() {
             char *old = malloc(sizeof(PATH[0]));
             strcpy(old, PATH[0]);
             strcat(PATH[0], p_args[0]);
-            
             if (args[args_index+1] == NULL) {
                 exec(p_args);
                 exit(0); 
@@ -63,26 +64,26 @@ void check_redir(char *token, int token_length) {
 	int redir_found = 0; // where in token redir is
 	int redir_in_args;
     int end = 0;
-    while (redir_found < token_length && end == 0) {
+    while (redir_found < token_length && end == 0 && num_args < MAX_ARGS) {
 	    if (token[redir_found] == '>') {
             char tmp[MAX_LINE] = {'\0'};
             int tmp_index = 0;
             int token_index = 0;
-		    while (end == 0 && token_index <= redir_found) { // make string of chars before '>'
+		    while (end == 0 && token_index <= redir_found && tmp_index < redir_found) { // make string of chars before '>'
 		        if (token[token_index] != ' ' && token[token_index] != '\n') {  
                     tmp[tmp_index] = token[token_index];
                     if (token_index != redir_found - 1) { 
                         tmp_index++;
                     } else {
-                        args[num_args] = malloc(strlen(tmp));
-                        strncpy(args[num_args], tmp, strlen(tmp));
+                        args[num_args] = malloc(strlen(tmp) + 1);
+                        strncpy(args[num_args], tmp, strlen(tmp) + 1);
                         num_args++;
                         end = 1;
                     }
                 } else if (token[token_index] == ' ' ) {  
-                    int tmp_len = strlen(tmp);
-                    args[num_args] = malloc(tmp_len);
-		            strncpy(args[num_args], tmp, tmp_len); 
+                    int tmp_len = strlen(tmp) + 1;
+                    args[num_args] = malloc(tmp_len + 1);
+		            strncpy(args[num_args], tmp, tmp_len + 1); 
                     num_args++;
                     tmp_index = 0;
                     for (int j = 0; j < tmp_len + 1; j++) { tmp[j] = '\0'; } 
@@ -94,10 +95,9 @@ void check_redir(char *token, int token_length) {
             found_at = num_args;
             redir_in_args = found_at;
 		    int tmp2_index = redir_found;
-            while (token[tmp2_index] == ' ' && tmp2_index < token_length) { tmp2_index++; }
             int k = 0;
 		    char tmp2[MAX_LINE] = {'\0'};
-		    while (end == 0 && tmp2_index < token_length) { 
+		    while (end == 0 && tmp2_index < token_length) { // make string of chars after '>'
                 if ((token[tmp2_index] != '\n' && token[tmp2_index] != ' ')) {
                     tmp2[k] = token[tmp2_index]; 
 		            tmp2_index++; 
@@ -109,13 +109,21 @@ void check_redir(char *token, int token_length) {
                         k = 0;
                         for (int c = 0; c < tmp2_index + 1; c++) { tmp2[c] = '\0'; } 
                     } else if (token[tmp2_index] == '&') {
-                        args[num_args] = malloc(strlen(tmp2));
-                        strncpy(args[num_args], tmp2, strlen(tmp2));
+                        has_parallel = 1;
+                        args[num_args] = malloc(strlen(tmp2) + 1);
+                        strncpy(args[num_args], tmp2, strlen(tmp2) + 1);
                         num_args++;
+                        commands[num_commands] = args;
+                        for (int c = 0; c < tmp2_index; c++) { tmp2[c] = '\0'; }
+                        k = 0;
+                        for (int r = tmp2_index; r < token_length; r++) {
+                            tmp2[k] = token[r];
+                            k++;
+                        }
                         end = 1;
                     } 
                 } else if (token[tmp2_index] == ' ' && tmp2[0] != '\0') {
-                    int tmp2_len = strlen(tmp2);
+                    int tmp2_len = strlen(tmp2) + 1;
                     args[num_args] = malloc(tmp2_len);
                     strncpy(args[num_args], tmp2, tmp2_len);
                     num_args++;
@@ -123,17 +131,19 @@ void check_redir(char *token, int token_length) {
                     k = 0;
                     for (int c = 0; c < tmp2_len + 1; c++) { tmp2[c] = '\0'; } 
                 } else if (token[tmp2_index] == '\n' && tmp2[0] != '\0') {
-                    args[num_args] = malloc(strlen(tmp2));
-                    strncpy(args[num_args], tmp2, strlen(tmp2));
+                    args[num_args] = malloc(strlen(tmp2) + 1);
+                    strncpy(args[num_args], tmp2, strlen(tmp2) + 1);
                     tmp2_index = token_length;
                     end = 1;
+                } else if (token[tmp2_index] == ' ' && tmp2[0] == '\0') {
+                    tmp2_index++;
                 } else {
                     end = 1; 
                 } 
             }
         } else if (token[redir_found] == '\n') {
            break; 
-        } else if (redir_in_args != found_at) {
+        } else { 
             redir_found++;
         }
 	}
@@ -175,7 +185,7 @@ void parse(FILE *file) {
     token = strtok(line, " \t \n > &");
 
     while (token != NULL && num_args < MAX_ARGS - 1 && found_at == -1) {
-        token_length = strlen(token);
+        token_length = strlen(token) + 1;
         args[num_args] = malloc(token_length);
         strncpy(args[num_args], token, token_length);
         next_arg = args[num_args];
@@ -216,7 +226,7 @@ int batch(char *filename) {
     do {
         parse(file);
         check_parallel();
-	    if (strcmp(args[0], "path") != 0 && PATH[0] != NULL) {
+	    if (PATH[0] != NULL &&strcmp(args[0], "path") != 0) {
             int i = 0;
             while (i < in_path && PATH[i] != NULL) {
                 strcat(PATH[i], args[0]);
@@ -224,8 +234,9 @@ int batch(char *filename) {
                 path_changed = 1;
             }
 	    }
-        if (args[0] != " " && has_parallel == 0)
+        if (args[0] != " " && has_parallel == 0) {
             exec(args);
+        }
         
         if (path_changed != 0 && in_path > 0) {
             for (int i = 0; i < in_path; i++) {
@@ -235,7 +246,6 @@ int batch(char *filename) {
         }
     }
     while (args[0] != NULL && next_arg != NULL);
-    
     for (int i = 0; i < num_args; i++) {
         free(args[i]);
     }

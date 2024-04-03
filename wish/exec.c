@@ -9,13 +9,18 @@
 
 #define MAX_PATH 20
 #define MAX_LINE 50
+#define MAX_COMMANDS 10
 
 extern int num_args;
 extern int found_at;
 extern int in_path;
 extern int path_changed;
+extern int has_parallel;
+extern int num_commands;
+extern char **commands[MAX_COMMANDS];
 extern char error_message[30];
 extern char *PATH[MAX_PATH];
+extern int has_parallel;
 
 char *next_arg;
 int found = 0; // path where access() does not fail
@@ -70,11 +75,22 @@ void exec_cmd(char *PATH[MAX_PATH], char **exec_args) { // execute other command
         }
     }
     if (strcmp(exec_args[0], "&") != 0) {
-        if (execv(PATH[found], exec_args) != 0) { 
-            print_error();
-            next_arg = " ";
-            //printf("exec failed with path: %s and args: %s\n", PATH[found], *exec_args);
-            exit(1);
+        if (has_parallel == 1 && num_commands > 0) {
+            for (int i = 0; i < num_commands; i++) {
+                if (execv(PATH[found], exec_args) != 0) { 
+                    print_error();
+                    next_arg = " ";
+                    //printf("exec failed with path: %s and args: %s\n", PATH[found], *exec_args);
+                    exit(1);
+                }
+            }
+        } else {
+            if (execv(PATH[found], exec_args) != 0) { 
+                print_error();
+                next_arg = " ";
+                //printf("exec failed with path: %s and args: %s\n", PATH[found], *exec_args);
+                exit(1);
+            }
         }
     } else {
         // input starts with &
@@ -104,12 +120,12 @@ void exec_path(char **exec_args) { // path
         for (int j = 0; j < num_args - 1; j++) {
 	        if (PATH[j] != NULL) 
 		        free(PATH[j]);
-	        PATH[j] = malloc(strlen(exec_args[j+1]) + 3);
-	        char *tmp = malloc(strlen(exec_args[j+1]) + 3);
-	        strcat(tmp, exec_args[j+1]);
-	        strcpy(PATH[j], tmp);
+	        PATH[j] = malloc(strlen(exec_args[j+1]) + 2);
+	        //char *tmp = malloc(strlen(exec_args[j+1]) + 3);
+	        //strcat(tmp, exec_args[j+1]);
+            strcpy(PATH[j], exec_args[j+1]);
 	        strcat(PATH[j], "/");
-	        free(tmp);
+	        //free(tmp);
             in_path++;
 	    }
     } else if (exec_args[1] == NULL) { // no args
